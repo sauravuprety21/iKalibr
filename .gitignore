@@ -193,3 +193,5 @@ add_gitmodules.sh
 !/docs/appendix/reference.bib
 !/docs/appendix/authors/
 
+!/data/inml
+

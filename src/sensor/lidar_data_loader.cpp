@@ -76,6 +76,9 @@ LiDARDataLoader::Ptr LiDARDataLoader::GetLoader(const std::string &lidarModelStr
         case LidarModelType::LIVOX_CUSTOM:
             dataLoader = LivoxLiDAR::Create(lidarModel);
             break;
+        case LidarModelType::RSLIDAR_POINTS:
+            dataLoader = RSLIDAR_POINTS::Create(lidarModel);
+            break;
         default:
             throw Status(Status::WARNING, LidarModel::UnsupportedLiDARModelMsg(lidarModelStr));
     }
@@ -492,6 +495,56 @@ LiDARFrame::Ptr LivoxLiDAR::UnpackScan(const rosbag::MessageInstance &msgInstanc
         }
     }
     cloud->resize(j);
+
+    return LiDARFrame::Create(timebase, cloud);
+}
+// ----------
+// RSLIDAR_POINTS
+// ----------
+
+RSLIDAR_POINTS::RSLIDAR_POINTS(LidarModelType lidarModel)
+    : LiDARDataLoader(lidarModel) {}
+
+RSLIDAR_POINTS::Ptr RSLIDAR_POINTS::Create(LidarModelType lidarModel) {
+    return std::make_shared<RSLIDAR_POINTS>(lidarModel);
+}
+
+LiDARFrame::Ptr RSLIDAR_POINTS::UnpackScan(const rosbag::MessageInstance &msgInstance) {
+    sensor_msgs::PointCloud2::ConstPtr lidarMsg =
+        msgInstance.instantiate<sensor_msgs::PointCloud2>();
+    CheckMessage<sensor_msgs::PointCloud2>(lidarMsg);
+
+    RsPointCloud pcIn;
+    pcl::fromROSMsg(*lidarMsg, pcIn);
+
+    if (lidarMsg->header.stamp.isZero()) {
+        SPDLOG_WARN("RSLIDAR_POINTS scan with zero timestamp.");
+    }
+    double timebase = lidarMsg->header.stamp.toSec();
+
+    IKalibrPointCloud::Ptr cloud(new IKalibrPointCloud());
+    cloud->is_dense = false;
+    cloud->resize(pcIn.size());
+
+    size_t validCount = 0;
+    for (const auto &src : pcIn) {
+        if (!pcl::isFinite(src)) {
+            continue;
+        }
+
+        double depth = sqrt(src.x * src.x + src.y * src.y + src.z * src.z);
+        if (depth < 1.0 || depth > 100.0) {
+            continue;
+        }
+
+        IKalibrPoint point;
+        point.x = src.x;
+        point.y = src.y;
+        point.z = src.z;
+        point.timestamp = src.timestamp;
+        cloud->points[validCount++] = point;
+    }
+    cloud->resize(validCount);
 
     return LiDARFrame::Create(timebase, cloud);
 }

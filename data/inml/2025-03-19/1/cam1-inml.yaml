@@ -10,26 +10,19 @@ Configor:
     #   7. SENSOR_IMU_DEG_G_NEG: gyro unit (deg/s), acce unit (-G)
     IMUTopics:
       # at least one IMU is integrated in the sensor suite
-      - key: "/livox_avia/imu"
+      - key: "/mcu_node/data_link/icm/data"
         value:
-          Type: "SENSOR_IMU_G"
+          Type: "SENSOR_IMU"
           # the inertial intrinsic filename, a default template (identity) is provided in 'ikalibr/config'
           # if you want to perform IMU-only multi-IMU calibration, you are expected to pre-calibrate
           # the intrinsics of your IMUs using program 'ikalibr_imu_intri_calib'. Otherwise, just use the default
           # one, since for other sensor suites, such as visual-inertial, radar-inertial, etc.,
           # inertial intrinsics would be optimized in spatiotemporal calibration
-          Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/data/real-world/iKalibr-data-2024-06-25-14-52-11/mti-imu-intri.yaml"
+          Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/data/inml/2025-03-19/icm-imu-intri.yaml"
           # the weights should be set based on the noise level of your own IMUs
           # large noise level points to small weight
-          AcceWeight: 09.00
-          GyroWeight: 29.00
-      # another IMU, if only one IMU is integrated, just comment out the following key item
-      - key: "/mti/imu"
-        value:
-          Type: "SENSOR_IMU"
-          Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/data/real-world/iKalibr-data-2024-06-25-14-52-11/mti-imu-intri.yaml"
-          AcceWeight: 17.68
-          GyroWeight: 57.66
+          AcceWeight: 08.00
+          GyroWeight: 25.00
     # key: radar topic, value: radar type. Supported radar types are:
     #   1.     AINSTEIN_RADAR: https://github.com/AinsteinAI/ainstein_radar.git
     #   2. AWR1843BOOST_RAW: https://github.com/Unsigned-Long/ti_mmwave_rospkg.git
@@ -38,24 +31,11 @@ Configor:
     #   5.  POINTCLOUD2_POSIV: 'sensor_msgs/PointCloud2' with point format: [x, y, z, intensity, velocity]
     #   6.  POINTCLOUD2_XRIO: 'sensor_msgs/PointCloud2' with x-RIO point format (see https://github.com/christopherdoer/rio.git)
     RadarTopics:
-      # # if no radar is integrated in your sensor suite, just comment out the following key items
-      # - key: "/radar0/scan"
-      #   value:
-      #     Type: "AWR1843BOOST_CUSTOM"
-      #     Weight: 10.0
-      # - key: "/radar1/scan"
-      #   value:
-      #     Type: "AWR1843BOOST_CUSTOM"
-      #     Weight: 10.0
-    #   1.        Velodyne LiDARs: VLP_16_PACKET, VLP_POINTS
-    #   2.          Ouster LiDARs: OUSTER_POINTS
-    #   3. Hesai Pandar XT LiDARs: PANDAR_XT_POINTS
-    #   4.           Livox LiDARs: LIVOX_CUSTOM (the official 'xfer_format'=1, mid-360 and avia is recommend)
     LiDARTopics:
       # if no LiDAR is integrated in your sensor suite, just comment out the following key items
-      - key: "/livox_avia/lidar"
+      - key: "/velodyne_packets"
         value:
-          Type: "LIVOX_CUSTOM"
+          Type: "VLP_16_PACKET"
           Weight: 100.0
     # key: camera topic, value: camera type. Supported camera types:
     #   1. SENSOR_IMAGE_GS: https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Image.html\n"
@@ -68,14 +48,14 @@ Configor:
     #   8. SENSOR_IMAGE_COMP_RS_LAST: last-row exposure, https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/CompressedImage.html\n"
     CameraTopics:
       # if no camera is integrated in your sensor suite, just comment out the following key items
-      - key: "/cam_gs/image_compressed"
+      - key: "/cam_1/image_raw"
         value:
-          Type: "SENSOR_IMAGE_COMP_GS"
+          Type: "SENSOR_IMAGE_GS"
           # the camera intrinsic filename, default templates are provided in 'ikalibr/config'
           # two types of optical cameras are support, namely 'pinhole-brown' and 'pinhole-fisheye'
           # these camera intrinsics are required pre-calibrated
           # Kalibr is recommended to perform intrinsic calibration (https://github.com/ethz-asl/kalibr.git)
-          Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/data/real-world/cam-gs-intri.yaml"
+          Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/data/inml/2025-03-19/cam1.yaml"
           # 0.1 for 'LIN_VEL_SPLINE', and 50.0 for 'LIN_POS_SPLINE'
           Weight: 50.0
           # use visual features that are tracked larger than 'TrackLengthMin'
@@ -86,41 +66,16 @@ Configor:
           ScaleSplineType: LIN_POS_SPLINE
     # key: rgbd color image topic, value: camera type. Supported camera types are the same as the ones in 'CameraTopics'
     RGBDTopics:
-      # - key: "/rgbd1/color_frame"
-      #   value:
-      #     Type: "SENSOR_IMAGE_GS"
-      #     Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/.../rgbd1-intri.yaml"
-      #     # the depth map needs to correspond one-to-one with the pixels in the color image after undistorted.
-      #     DepthTopic: "/rgbd1/depth_frame"
-      #     # {real depth} = abs{DepthFactor} * {image depth}, if 'DepthFactor' is positive
-      #     # {real depth} = abs{DepthFactor} / {image depth}, if 'DepthFactor' is negative (depth images are inverse ones)
-      #     DepthFactor: 0.001
-      #     # too large weight would lead to poor convergence
-      #     Weight: 0.1
-      #     TrackLengthMin: 5
-      # - key: "/rgbd2/color_frame"
-      #   value:
-      #     Type: "SENSOR_IMAGE_GS"
-      #     Intrinsics: "/home/zoroob/MSc/open-source/calibration/iKalibr/src/ikalibr/.../rgbd2-intri.yaml"
-      #     # the depth map needs to correspond one-to-one with the pixels in the color image after undistorted.
-      #     DepthTopic: "/rgbd2/depth_frame"
-      #     # {real depth} = abs{DepthFactor} * {image depth}, if 'DepthFactor' is positive
-      #     # {real depth} = abs{DepthFactor} / {image depth}, if 'DepthFactor' is negative (depth images are inverse ones)
-      #     DepthFactor: 0.001
-      #     # too large weight would lead to poor convergence
-      #     Weight: 0.1
-      #     TrackLengthMin: 5
-    # the reference IMU, it should be one of multiple IMUs (the ros topic of the IMU)
-    ReferIMU: "/mti/imu"
-    BagPath: "/ssd/bag_files/open_source/ikalibr/iKalibr-data-2024-06-25-14-52-11-20250303T212532Z-001/ikalibr-data.bag"
+    ReferIMU: "/mcu_node/data_link/icm/data"
+    BagPath: "/ssd/bag_files/calibration/ros2bags/march19_2025/ikalibr_bag.bag"
     # the time piece: [BegTime, BegTime + Duration], unit: second(s)
     # if you want to use all time data for calibration, please set them to negative numbers
     # Note that the 'BegTime' here is measured from the start time of bag
     # and is not related to the timestamp of the data recorded in the package.
     # an example where multi-sensor data in time range [40, 80] is connected to excited motion
-    BeginTime: 10
-    Duration: 52
-    OutputPath: "/ssd/bag_files/open_source/ikalibr/iKalibr-data-2024-06-25-14-52-11-20250303T212532Z-001/iKalibr-data-2024-06-25-14-52-11"
+    BeginTime: 9
+    Duration: 69
+    OutputPath: "/ssd/bag_files/calibration/ros2bags/march19_2025/ikalibr/cam1/"
   Prior:
     # unit: m/s^2
     GravityNorm: 9.8
